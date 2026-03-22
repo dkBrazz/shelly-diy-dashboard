@@ -3,7 +3,7 @@ FROM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
 # Copy package.json and package-lock.json (if it exists)
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy frontend source and build it
 COPY frontend/ ./
