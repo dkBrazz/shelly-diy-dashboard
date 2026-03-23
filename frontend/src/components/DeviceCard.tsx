@@ -1,25 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import type { Device, PowerMeasure, MeasureHistoryDTO } from '../types';
+import type { Device, PowerMeasure, MeasureHistoryDTO, Scope } from '../types';
 import MeasureTile from './MeasureTile';
 import VoltageGraph from './VoltageGraph';
 import { Activity, Thermometer, Sigma } from 'lucide-react';
 import { formatMeasure } from '../utils/formatters';
+import { SCOPE_DURATIONS, SCOPE_LABELS } from '../types';
 
 interface DeviceCardProps {
   device: Device;
   latestMeasure?: PowerMeasure;
+  scope: Scope;
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure }) => {
+const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope }) => {
   const [history, setHistory] = useState<MeasureHistoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyRange, setHistoryRange] = useState<{ start: number; end: number } | null>(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
+      setLoading(true);
       try {
+        const duration = SCOPE_DURATIONS[scope];
         const endTime = Date.now();
-        const startTime = endTime - 24 * 60 * 60 * 1000;
+        const startTime = endTime - duration;
         const end = new Date(endTime).toISOString();
         const start = new Date(startTime).toISOString();
         const response = await fetch(`/api/devices/${device.id}/history?start=${start}&end=${end}`);
@@ -45,7 +49,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure }) => {
     // Poll history every 10 minutes
     const interval = setInterval(fetchHistory, 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [device.id]);
+  }, [device.id, scope]);
 
   const isOnline = latestMeasure && (Date.now() - new Date(latestMeasure.time).getTime() < 60000);
 
@@ -110,7 +114,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure }) => {
         {/* Historical graph */}
         <div>
           <h4 className="text-sm font-semibold text-gray-400 flex items-center space-x-2 px-1">
-            <span>24h Voltage History</span>
+            <span>{SCOPE_LABELS[scope]} Voltage History</span>
           </h4>
           {loading ? (
             <div className="h-64 flex items-center justify-center text-gray-500 text-sm">Loading history...</div>

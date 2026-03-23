@@ -11,7 +11,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { MeasureHistoryDTO } from '../types';
-import { formatTime, formatDateTime } from '../utils/formatters';
+import { formatTime, formatDateTime, KYIV_LOCALE, KYIV_TIMEZONE } from '../utils/formatters';
 
 interface VoltageGraphProps {
   data: MeasureHistoryDTO[];
@@ -35,6 +35,20 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
     return [start, end];
   }, [range]);
 
+  const tickFormatter = (value: number) => {
+    const d = new Date(value);
+    if (range && (range.end - range.start) > 24 * 60 * 60 * 1000) {
+      return d.toLocaleString(KYIV_LOCALE, {
+        timeZone: KYIV_TIMEZONE,
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    return formatTime(value);
+  };
+
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center bg-gray-900/50 rounded-lg border border-gray-800 border-dashed text-gray-600 text-sm">
@@ -50,7 +64,7 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
           <XAxis 
             dataKey="time" 
-            tickFormatter={(value) => formatTime(value)} 
+            tickFormatter={tickFormatter} 
             stroke="#9ca3af"
             fontSize={12}
             minTickGap={30}
@@ -61,14 +75,24 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
           <YAxis 
             stroke="#9ca3af" 
             fontSize={12} 
-            domain={[0, 280]}
+            domain={[150, 280]}
+            ticks={[150, 207, 230, 253, 280]}
             unit="V"
           />
           <ReferenceLine 
             y={230} 
-            stroke="#4b5563" 
+            stroke="#10b121"
             strokeDasharray="3 3" 
-            label={{ position: 'right', value: '230V', fill: '#9ca3af', fontSize: 10 }} 
+          />
+          <ReferenceLine
+            y={207}
+            stroke="#ffd338"
+            strokeDasharray="3 3"
+          />
+          <ReferenceLine
+            y={253}
+            stroke="#ffd338"
+            strokeDasharray="3 3"
           />
           <Tooltip
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#f3f4f6' }}
