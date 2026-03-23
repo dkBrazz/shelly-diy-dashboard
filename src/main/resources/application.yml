@@ -1,3 +1,6 @@
+server:
+  forward-headers-strategy: native
+
 spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:shelly}
