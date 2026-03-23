@@ -20,7 +20,7 @@ function App() {
     if (s && SCOPE_DURATIONS[s]) return s;
     const stored = localStorage.getItem('selectedScope') as Scope;
     if (stored && SCOPE_DURATIONS[stored]) return stored;
-    return '24h';
+    return '3h';
   });
 
   useEffect(() => {
