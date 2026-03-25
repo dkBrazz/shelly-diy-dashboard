@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { Device, PowerMeasure, MeasureHistoryDTO, Scope } from '../types';
 import MeasureTile from './MeasureTile';
 import VoltageGraph from './VoltageGraph';
+import CurrentGraph from './CurrentGraph';
 import { Activity, Thermometer, Sigma } from 'lucide-react';
 import { formatMeasure } from '../utils/formatters';
 import { SCOPE_DURATIONS, SCOPE_LABELS } from '../types';
@@ -120,6 +121,17 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope })
             <div className="h-64 flex items-center justify-center text-gray-500 text-sm">Loading history...</div>
           ) : (
             <VoltageGraph data={history} range={historyRange} />
+          )}
+        </div>
+
+        <div>
+          <h4 className="text-sm font-semibold text-gray-400 flex items-center space-x-2 px-1">
+            <span>{SCOPE_LABELS[scope]} Current History</span>
+          </h4>
+          {loading ? (
+            <div className="h-64 flex items-center justify-center text-gray-500 text-sm">Loading history...</div>
+          ) : (
+            <CurrentGraph data={history} range={historyRange} />
           )}
         </div>
       </div>
