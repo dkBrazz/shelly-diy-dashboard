@@ -4,7 +4,7 @@ import DeviceCard from './components/DeviceCard';
 import ScopeSwitcher from './components/ScopeSwitcher';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LayoutDashboard, RefreshCw, Zap, AlertCircle, LogOut, LogIn, User } from 'lucide-react';
-import { formatTime } from './utils/formatters';
+import { formatTime, formatToQuery, parseFromQuery } from './utils/formatters';
 import { SCOPE_DURATIONS } from './types';
 
 function App() {
@@ -17,19 +17,58 @@ function App() {
   const [scope, setScope] = useState<Scope>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const s = searchParams.get('scope') as Scope;
-    if (s && SCOPE_DURATIONS[s]) return s;
+    if (s === 'custom' || (s && SCOPE_DURATIONS[s])) return s;
     const stored = localStorage.getItem('selectedScope') as Scope;
-    if (stored && SCOPE_DURATIONS[stored]) return stored;
+    if (stored === 'custom' || (stored && SCOPE_DURATIONS[stored])) return stored;
     return '3h';
   });
+
+  const [customRange, setCustomRange] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const startParam = searchParams.get('start');
+    const endParam = searchParams.get('end');
+
+    const parseParam = (param: string | null, fallback: string) => {
+      if (!param) return fallback;
+      const parsed = parseFromQuery(param);
+      if (parsed) return parsed;
+      const date = new Date(param);
+      return !isNaN(date.getTime()) ? date.toISOString() : fallback;
+    };
+
+    const end = parseParam(endParam, new Date().toISOString());
+    const start = parseParam(startParam, new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString());
+
+    return { start, end };
+  });
+
+  const handleScopeChange = (newScope: Scope) => {
+    if (newScope === 'custom' && scope !== 'custom') {
+      const duration = SCOPE_DURATIONS[scope] || (3 * 60 * 60 * 1000);
+      const end = new Date();
+      const start = new Date(end.getTime() - duration);
+      setCustomRange({ 
+        start: start.toISOString(), 
+        end: end.toISOString() 
+      });
+    }
+    setScope(newScope);
+  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.set('scope', scope);
+    if (scope === 'custom') {
+      searchParams.set('start', formatToQuery(customRange.start));
+      searchParams.set('end', formatToQuery(customRange.end));
+    } else {
+      searchParams.delete('start');
+      searchParams.delete('end');
+    }
     const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
     window.history.replaceState(null, '', newUrl);
     localStorage.setItem('selectedScope', scope);
-  }, [scope]);
+  }, [scope, customRange]);
 
   const fetchUser = async (): Promise<UserInfo | null> => {
     try {
@@ -85,9 +124,10 @@ function App() {
       setLatestMeasures(latestMap);
       setLastUpdate(new Date());
       setError(null);
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Connection error';
       console.error('Failed to fetch data:', err);
-      setError(err.message || 'Connection error');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -106,7 +146,7 @@ function App() {
     const interval = setInterval(fetchData, 15 * 1000);
     
     return () => clearInterval(interval);
-  }, [user?.email]);
+  }, [user]);
 
   return (
     <div className="min-h-screen w-full bg-black text-gray-100 font-sans p-4 md:p-8">
@@ -176,7 +216,12 @@ function App() {
             <LayoutDashboard className="w-4 h-4 text-blue-500" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400">Device Dashboard</h2>
           </div>
-          <ScopeSwitcher currentScope={scope} onScopeChange={setScope} />
+          <ScopeSwitcher 
+            currentScope={scope} 
+            onScopeChange={handleScopeChange} 
+            customRange={customRange}
+            onCustomRangeChange={setCustomRange}
+          />
         </div>
       </header>
 
@@ -202,6 +247,7 @@ function App() {
                   device={device} 
                   latestMeasure={latestMeasures[device.id]} 
                   scope={scope}
+                  customRange={scope === 'custom' ? customRange : undefined}
                 />
               </ErrorBoundary>
             ))}

@@ -11,9 +11,10 @@ interface DeviceCardProps {
   device: Device;
   latestMeasure?: PowerMeasure;
   scope: Scope;
+  customRange?: { start: string; end: string };
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope }) => {
+const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope, customRange }) => {
   const [history, setHistory] = useState<MeasureHistoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyRange, setHistoryRange] = useState<{ start: number; end: number } | null>(null);
@@ -22,11 +23,19 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope })
     const fetchHistory = async () => {
       setLoading(true);
       try {
-        const duration = SCOPE_DURATIONS[scope];
-        const endTime = Date.now();
-        const startTime = endTime - duration;
-        const end = new Date(endTime).toISOString();
-        const start = new Date(startTime).toISOString();
+        let start, end, startTime, endTime;
+        if (scope === 'custom' && customRange) {
+          start = customRange.start;
+          end = customRange.end;
+          startTime = new Date(start).getTime();
+          endTime = new Date(end).getTime();
+        } else {
+          const duration = SCOPE_DURATIONS[scope] || (3 * 60 * 60 * 1000);
+          endTime = Date.now();
+          startTime = endTime - duration;
+          end = new Date(endTime).toISOString();
+          start = new Date(startTime).toISOString();
+        }
         const response = await fetch(`/api/devices/${device.id}/history?start=${start}&end=${end}`);
         if (!response.ok) {
            throw new Error(`Server returned ${response.status}`);
@@ -50,7 +59,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope })
     // Poll history every 10 minutes
     const interval = setInterval(fetchHistory, 10 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [device.id, scope]);
+  }, [device.id, scope, customRange]);
 
   const isOnline = latestMeasure && (Date.now() - new Date(latestMeasure.time).getTime() < 60000);
 
@@ -79,7 +88,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope })
           </div>
           <div className="flex items-center space-x-2 bg-gray-900/50 px-3 py-2 rounded-full border border-gray-700/50">
             <Sigma className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-semibold text-gray-200">{formatMeasure(latestMeasure?.totalPower!/1000)} kW</span>
+            <span className="text-sm font-semibold text-gray-200">{formatMeasure((latestMeasure?.totalPower ?? 0)/1000)} kW</span>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -10,7 +10,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { MeasureHistoryDTO } from '../types';
-import { formatTime, formatDateTime, KYIV_LOCALE, KYIV_TIMEZONE } from '../utils/formatters';
+import { formatTime, formatDateTime } from '../utils/formatters';
+import { APP_LOCALE, APP_TIMEZONE } from '../config';
 
 interface CurrentGraphProps {
   data: MeasureHistoryDTO[];
@@ -25,20 +26,21 @@ const CurrentGraph: React.FC<CurrentGraphProps> = ({ data, range }) => {
     }));
   }, [data]);
 
+  const [now] = useState(() => Date.now());
   const domain = useMemo(() => {
     if (range) {
       return [range.start, range.end];
     }
-    const end = Date.now();
+    const end = now;
     const start = end - 24 * 60 * 60 * 1000;
     return [start, end];
-  }, [range]);
+  }, [range, now]);
 
   const tickFormatter = (value: number) => {
     const d = new Date(value);
     if (range && (range.end - range.start) > 24 * 60 * 60 * 1000) {
-      return d.toLocaleString(KYIV_LOCALE, {
-        timeZone: KYIV_TIMEZONE,
+      return d.toLocaleString(APP_LOCALE, {
+        timeZone: APP_TIMEZONE,
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -81,7 +83,7 @@ const CurrentGraph: React.FC<CurrentGraphProps> = ({ data, range }) => {
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#f3f4f6' }}
             itemStyle={{ color: '#f3f4f6' }}
             labelFormatter={(label) => formatDateTime(label)}
-            formatter={(value: any, name: any) => [value != null ? `${value.toFixed(2)} A` : '--', name]}
+            formatter={(value: any, name: any) => [value != null ? `${Number(value).toFixed(2)} A` : '--', name]}
           />
           <Legend iconType="circle" />
           <Line

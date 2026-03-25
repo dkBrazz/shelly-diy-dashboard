@@ -5,6 +5,7 @@ import org.dkbrazz.model.entity.PowerMeasure
 import org.dkbrazz.repository.DeviceRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -31,8 +32,11 @@ class ShellyEventProcessor(
 
             // ts is a Double in seconds with sub-second precision (e.g., 1773223720.09)
             val ts = event.status.ts ?: (System.currentTimeMillis() / 1000.0)
-            val seconds = ts.toLong()
-            val nanos = ((ts - seconds) * 1_000_000_000).toLong()
+            val bd = BigDecimal.valueOf(ts)
+            val seconds = bd.toLong()
+            val nanos = bd.subtract(BigDecimal.valueOf(seconds))
+                .multiply(BigDecimal.valueOf(1_000_000_000))
+                .toLong()
             val time = OffsetDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneOffset.UTC)
 
             val em = event.status.em
