@@ -81,7 +81,7 @@ const CurrentGraph: React.FC<CurrentGraphProps> = ({ data, range }) => {
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#f3f4f6' }}
             itemStyle={{ color: '#f3f4f6' }}
             labelFormatter={(label) => formatDateTime(label)}
-            formatter={(value: any) => [value != null ? value.toFixed(2) : '--', "A"]}
+            formatter={(value: any, name: any) => [value != null ? `${value.toFixed(2)} A` : '--', name]}
           />
           <Legend iconType="circle" />
           <Line

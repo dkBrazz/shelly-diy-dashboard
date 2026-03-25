@@ -98,7 +98,7 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#f3f4f6' }}
             itemStyle={{ color: '#f3f4f6' }}
             labelFormatter={(label) => formatDateTime(label)}
-            formatter={(value: any) => [value != null ? value.toFixed(1) : '--', "V"]}
+            formatter={(value: any, name: any) => [value != null ? `${value.toFixed(1)} V` : '--', name]}
           />
           <Legend iconType="circle" />
           <Line
