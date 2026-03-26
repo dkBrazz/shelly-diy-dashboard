@@ -4,6 +4,7 @@ import org.dkbrazz.model.dto.ShellyEvent
 import org.dkbrazz.model.entity.PowerMeasure
 import org.dkbrazz.repository.DeviceRepository
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.Instant
@@ -18,6 +19,7 @@ class ShellyEventProcessor(
 ) {
     private val logger = LoggerFactory.getLogger(ShellyEventProcessor::class.java)
 
+    @Async
     fun processEvent(event: ShellyEvent) {
         if (event.event != "Shelly:StatusOnChange") {
             logger.debug("Skipping event with type ${event.event}")

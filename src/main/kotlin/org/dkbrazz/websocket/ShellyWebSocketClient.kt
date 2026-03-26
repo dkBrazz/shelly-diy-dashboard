@@ -20,6 +20,8 @@ class ShellyWebSocketClient(
     private val objectMapper: ObjectMapper
 ) {
     private val logger = LoggerFactory.getLogger(ShellyWebSocketClient::class.java)
+    
+    @Volatile
     private var session: WebSocketSession? = null
     private val connecting = AtomicBoolean(false)
 
@@ -61,6 +63,7 @@ class ShellyWebSocketClient(
 
                 override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
                     logger.error("WebSocket transport error: ${exception.message}", exception)
+                    connecting.set(false)
                 }
 
                 override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
