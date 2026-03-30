@@ -3,6 +3,7 @@ package org.dkbrazz.service
 import org.dkbrazz.model.dto.MeasureHistoryDTO
 import org.dkbrazz.model.dto.PowerMeasureDTO
 import org.dkbrazz.model.entity.PowerMeasure
+import org.dkbrazz.model.unscaleMeasure
 import org.dkbrazz.repository.DeviceRepository
 import org.dkbrazz.repository.PowerMeasureRepository
 import org.slf4j.LoggerFactory
@@ -35,17 +36,17 @@ class MeasureService(
                 PowerMeasureDTO(
                     time = m.time,
                     deviceId = device.id!!,
-                    aVoltage = m.aVoltage.roundToOne(),
-                    aCurrent = m.aCurrent.roundToOne(),
-                    aPower = m.aPower.roundToOne(),
-                    bVoltage = m.bVoltage.roundToOne(),
-                    bCurrent = m.bCurrent.roundToOne(),
-                    bPower = m.bPower.roundToOne(),
-                    cVoltage = m.cVoltage.roundToOne(),
-                    cCurrent = m.cCurrent.roundToOne(),
-                    cPower = m.cPower.roundToOne(),
-                    totalPower = m.totalPower.roundToOne(),
-                    temperature = m.temperature.roundToOne()
+                    aVoltage = unscaleMeasure(m.aVoltage).roundToOne(),
+                    aCurrent = unscaleMeasure(m.aCurrent).roundToOne(),
+                    aPower = unscaleMeasure(m.aPower).roundToOne(),
+                    bVoltage = unscaleMeasure(m.bVoltage).roundToOne(),
+                    bCurrent = unscaleMeasure(m.bCurrent).roundToOne(),
+                    bPower = unscaleMeasure(m.bPower).roundToOne(),
+                    cVoltage = unscaleMeasure(m.cVoltage).roundToOne(),
+                    cCurrent = unscaleMeasure(m.cCurrent).roundToOne(),
+                    cPower = unscaleMeasure(m.cPower).roundToOne(),
+                    totalPower = unscaleMeasure(m.totalPower).roundToOne(),
+                    temperature = unscaleMeasure(m.temperature).roundToOne()
                 )
             }
         }

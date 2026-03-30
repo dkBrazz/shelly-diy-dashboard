@@ -22,18 +22,18 @@ class PowerMeasure(
     @JoinColumn(name = "device_id", nullable = false)
     var device: Device,
 
-    @Column(name = "a_voltage") var aVoltage: Double? = null,
-    @Column(name = "a_current") var aCurrent: Double? = null,
-    @Column(name = "a_power") var aPower: Double? = null,
+    @Column(name = "a_voltage", nullable = false) var aVoltage: Int,
+    @Column(name = "a_current", nullable = false) var aCurrent: Int,
+    @Column(name = "a_power", nullable = false) var aPower: Int,
 
-    @Column(name = "b_voltage") var bVoltage: Double? = null,
-    @Column(name = "b_current") var bCurrent: Double? = null,
-    @Column(name = "b_power") var bPower: Double? = null,
+    @Column(name = "b_voltage", nullable = false) var bVoltage: Int,
+    @Column(name = "b_current", nullable = false) var bCurrent: Int,
+    @Column(name = "b_power", nullable = false) var bPower: Int,
 
-    @Column(name = "c_voltage") var cVoltage: Double? = null,
-    @Column(name = "c_current") var cCurrent: Double? = null,
-    @Column(name = "c_power") var cPower: Double? = null,
+    @Column(name = "c_voltage", nullable = false) var cVoltage: Int,
+    @Column(name = "c_current", nullable = false) var cCurrent: Int,
+    @Column(name = "c_power", nullable = false) var cPower: Int,
 
-    @Column(name = "total_power") var totalPower: Double? = null,
-    @Column(name = "temperature") var temperature: Double? = null
+    @Column(name = "total_power", nullable = false) var totalPower: Int,
+    @Column(name = "temperature", nullable = false) var temperature: Int
 )

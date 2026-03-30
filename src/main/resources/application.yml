@@ -22,6 +22,7 @@ spring:
   sql:
     init:
       mode: always
+      schema-locations: classpath:schema.recommended.sql
 
   security:
     oauth2:

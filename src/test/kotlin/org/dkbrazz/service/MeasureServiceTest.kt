@@ -1,5 +1,6 @@
 package org.dkbrazz.service
 
+import org.dkbrazz.model.scaleMeasure
 import org.dkbrazz.model.entity.Device
 import org.dkbrazz.model.entity.PowerMeasure
 import org.dkbrazz.repository.DeviceRepository
@@ -54,11 +55,17 @@ class MeasureServiceTest {
         val measure = PowerMeasure(
             time = OffsetDateTime.now(),
             device = device,
-            aVoltage = 230.1234,
-            aCurrent = 1.5678,
-            aPower = 360.9999,
-            totalPower = 360.9999,
-            temperature = 35.45
+            aVoltage = scaleMeasure(230.1234),
+            aCurrent = scaleMeasure(1.5678),
+            aPower = scaleMeasure(360.9999),
+            bVoltage = scaleMeasure(229.8765),
+            bCurrent = scaleMeasure(1.4321),
+            bPower = scaleMeasure(328.7654),
+            cVoltage = scaleMeasure(231.0001),
+            cCurrent = scaleMeasure(1.5001),
+            cPower = scaleMeasure(346.5001),
+            totalPower = scaleMeasure(360.9999),
+            temperature = scaleMeasure(35.45)
         )
 
         `when`(deviceRepository.findAll()).thenReturn(listOf(device))

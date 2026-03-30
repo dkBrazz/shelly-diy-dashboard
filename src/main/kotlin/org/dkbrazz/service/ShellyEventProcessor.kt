@@ -1,5 +1,6 @@
 package org.dkbrazz.service
 
+import org.dkbrazz.model.requireScaledMeasure
 import org.dkbrazz.model.dto.ShellyEvent
 import org.dkbrazz.model.entity.PowerMeasure
 import org.dkbrazz.repository.DeviceRepository
@@ -41,23 +42,23 @@ class ShellyEventProcessor(
                 .toLong()
             val time = OffsetDateTime.ofInstant(Instant.ofEpochSecond(seconds, nanos), ZoneOffset.UTC)
 
-            val em = event.status.em
+            val em = requireNotNull(event.status.em) { "Missing required measure group: em:0" }
             val temp = event.status.temperature
 
             val measure = PowerMeasure(
                 time = time,
                 device = device,
-                aVoltage = em?.aVoltage,
-                aCurrent = em?.aCurrent,
-                aPower = em?.aPower,
-                bVoltage = em?.bVoltage,
-                bCurrent = em?.bCurrent,
-                bPower = em?.bPower,
-                cVoltage = em?.cVoltage,
-                cCurrent = em?.cCurrent,
-                cPower = em?.cPower,
-                totalPower = em?.totalPower,
-                temperature = temp?.tC
+                aVoltage = requireScaledMeasure("a_voltage", em.aVoltage),
+                aCurrent = requireScaledMeasure("a_current", em.aCurrent),
+                aPower = requireScaledMeasure("a_act_power", em.aPower),
+                bVoltage = requireScaledMeasure("b_voltage", em.bVoltage),
+                bCurrent = requireScaledMeasure("b_current", em.bCurrent),
+                bPower = requireScaledMeasure("b_act_power", em.bPower),
+                cVoltage = requireScaledMeasure("c_voltage", em.cVoltage),
+                cCurrent = requireScaledMeasure("c_current", em.cCurrent),
+                cPower = requireScaledMeasure("c_act_power", em.cPower),
+                totalPower = requireScaledMeasure("total_act_power", em.totalPower),
+                temperature = requireScaledMeasure("tC", temp?.tC)
             )
 
             measureService.saveMeasure(measure)
