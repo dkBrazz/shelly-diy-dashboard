@@ -47,3 +47,8 @@ bin/
 
 .junie
 .air
+
+http
+.run
+samples
+src/main/resources/static
