@@ -41,4 +41,4 @@ shelly:
     auth-code: ${SHELLY_AUTH_CODE}
     client-id: ${SHELLY_CLIENT_ID:shelly-diy}
   dashboard:
-    max-measures: 100
+    max-measures: 150

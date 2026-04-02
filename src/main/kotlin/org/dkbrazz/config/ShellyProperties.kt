@@ -14,7 +14,7 @@ data class ShellyProperties(
     )
 
     data class Dashboard(
-        var maxMeasures: Int = 100
+        var maxMeasures: Int = 150
     )
 
     val apiUrl: String
