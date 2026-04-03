@@ -46,7 +46,7 @@ export interface UserInfo {
   picture: string | null;
 }
 
-export type Scope = '5m' | '30m' | '1h' | '3h' | '12h' | '24h' | '1w' | 'custom';
+export type Scope = '5m' | '30m' | '1h' | '3h' | '12h' | '24h' | '3d' | '1w' | 'custom';
 
 export const SCOPE_LABELS: Record<Scope, string> = {
   '5m': '5 minutes',
@@ -55,6 +55,7 @@ export const SCOPE_LABELS: Record<Scope, string> = {
   '3h': '3 hours',
   '12h': '12 hours',
   '24h': '24 hours',
+  '3d': '3 days',
   '1w': '1 week',
   'custom': 'Custom Range',
 };
@@ -66,5 +67,6 @@ export const SCOPE_DURATIONS: Record<string, number> = {
   '3h': 3 * 60 * 60 * 1000,
   '12h': 12 * 60 * 60 * 1000,
   '24h': 24 * 60 * 60 * 1000,
+  '3d': 3 * 24 * 60 * 60 * 1000,
   '1w': 7 * 24 * 60 * 60 * 1000,
 };

@@ -18,7 +18,7 @@ const ScopeSwitcher: React.FC<ScopeSwitcherProps> = ({
   customRange,
   onCustomRangeChange
 }) => {
-  const scopes: Scope[] = ['5m', '30m', '1h', '3h', '12h', '24h', '1w', 'custom'];
+  const scopes: Scope[] = ['5m', '30m', '1h', '3h', '12h', '24h', '3d', '1w', 'custom'];
 
   // Helper to convert ISO to datetime-local input format (YYYY-MM-DDTHH:mm) in APP_TIMEZONE
   const toAppTZISO = (isoString: string) => {
