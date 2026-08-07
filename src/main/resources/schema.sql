@@ -1,8 +1,8 @@
--- Recommended alternative schema for PostgreSQL 18.2 + TimescaleDB 2.25.2.
--- This is an alternative to schema.sql, not something to run alongside it
--- in the same database without dropping or renaming the existing objects.
+-- Active bootstrap schema for PostgreSQL 18.2 + TimescaleDB 2.25.2.
+-- Spring runs this file on application startup. schema.old.sql is retained only
+-- as a reference for the legacy floating-point schema.
 --
--- Key differences from schema.sql:
+-- Key differences from the legacy schema:
 -- 1. Fixed-point INTEGER storage for all measures.
 --    All measure values are expected to be multiplied by 1000 before insert.
 -- 2. Explicit Timescale hypertable configuration using the current CREATE TABLE

@@ -105,8 +105,8 @@ function App() {
         throw new Error('Failed to fetch data from server');
       }
 
-      const devicesData = await devicesRes.json();
-      const latestData = await latestRes.json();
+      const devicesData: Device[] = await devicesRes.json();
+      const latestData: PowerMeasure[] = await latestRes.json();
       
       if (Array.isArray(devicesData)) {
         setDevices(devicesData);
@@ -114,11 +114,8 @@ function App() {
       
       const latestMap: Record<number, PowerMeasure> = {};
       if (Array.isArray(latestData)) {
-        latestData.forEach((m: any) => {
-          const deviceId = m.deviceId ?? m.device?.id;
-          if (deviceId !== undefined) {
-            latestMap[deviceId] = m;
-          }
+        latestData.forEach((measure) => {
+          latestMap[measure.deviceId] = measure;
         });
       }
       setLatestMeasures(latestMap);

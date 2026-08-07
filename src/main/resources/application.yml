@@ -38,6 +38,7 @@ spring:
 shelly:
   cloud:
     region: ${SHELLY_REGION:shelly-241-eu}
+    websocket-regions: ${SHELLY_WEBSOCKET_REGIONS:shelly-241-eu,shelly-242-eu}
     auth-code: ${SHELLY_AUTH_CODE}
     client-id: ${SHELLY_CLIENT_ID:shelly-diy}
   dashboard:

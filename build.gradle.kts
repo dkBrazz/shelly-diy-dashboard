@@ -61,16 +61,16 @@ tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar
 
 val buildFrontend = tasks.register<Exec>("buildFrontend") {
     group = "build"
-    description = "Build the frontend part of the application"
+    description = "Install, lint, and build the frontend"
     workingDir = file("frontend")
     
     onlyIf { !project.hasProperty("skipFrontend") }
 
     val isWindows = System.getProperty("os.name").lowercase().contains("windows")
     if (isWindows) {
-        commandLine("cmd", "/c", "npm install && npm run build")
+        commandLine("cmd", "/c", "npm ci && npm run check")
     } else {
-        commandLine("sh", "-c", "npm install && npm run build")
+        commandLine("sh", "-c", "npm ci && npm run check")
     }
 }
 
