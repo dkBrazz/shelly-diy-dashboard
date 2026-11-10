@@ -19,11 +19,37 @@ interface VoltageGraphProps {
   range: { start: number; end: number } | null;
 }
 
+const Y_MIN = 150;
+const Y_MAX = 280;
+
+type VoltageKey = 'aVoltage' | 'bVoltage' | 'cVoltage';
+const VOLTAGE_KEYS: VoltageKey[] = ['aVoltage', 'bVoltage', 'cVoltage'];
+
+interface VoltagePoint {
+  time: number;
+  aVoltage: number | null;
+  bVoltage: number | null;
+  cVoltage: number | null;
+  // Real readings, kept for the tooltip; plotted values are clamped to the axis range.
+  raw: Record<VoltageKey, number | null>;
+}
+
+// Clamp to the fixed axis so outages (0 V) run along the bottom edge instead of rescaling the chart.
+const clampVoltage = (value: number | null): number | null =>
+  value == null ? null : Math.min(Y_MAX, Math.max(Y_MIN, value));
+
 const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
-  const chartData = useMemo(() => {
+  const chartData = useMemo<VoltagePoint[]>(() => {
     return data.map(item => ({
-      ...item,
-      time: new Date(item.time).getTime()
+      time: new Date(item.time).getTime(),
+      aVoltage: clampVoltage(item.aVoltage),
+      bVoltage: clampVoltage(item.bVoltage),
+      cVoltage: clampVoltage(item.cVoltage),
+      raw: {
+        aVoltage: item.aVoltage,
+        bVoltage: item.bVoltage,
+        cVoltage: item.cVoltage,
+      },
     }));
   }, [data]);
 
@@ -77,7 +103,8 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
           <YAxis 
             stroke="#9ca3af" 
             fontSize={12} 
-            domain={[150, 280]}
+            domain={[Y_MIN, Y_MAX]}
+            allowDataOverflow
             ticks={[150, 207, 230, 253, 280]}
             unit="V"
           />
@@ -100,7 +127,15 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#f3f4f6' }}
             itemStyle={{ color: '#f3f4f6' }}
             labelFormatter={(label) => (typeof label === 'number' || typeof label === 'string' ? formatDateTime(label) : label)}
-            formatter={(value: unknown, name: unknown) => [value != null ? `${Number(value).toFixed(1)} V` : '--', String(name)]}
+            formatter={(value: unknown, name: unknown, item: { dataKey?: unknown; payload?: unknown }) => {
+              const point = item.payload as VoltagePoint | undefined;
+              const key = item.dataKey;
+              const actual =
+                point && typeof key === 'string' && (VOLTAGE_KEYS as string[]).includes(key)
+                  ? point.raw[key as VoltageKey]
+                  : value;
+              return [actual != null ? `${Number(actual).toFixed(1)} V` : '--', String(name)];
+            }}
           />
           <Legend iconType="circle" />
           <Line
