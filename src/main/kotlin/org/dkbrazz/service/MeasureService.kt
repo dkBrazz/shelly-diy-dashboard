@@ -1,5 +1,6 @@
 package org.dkbrazz.service
 
+import org.dkbrazz.config.ShellyProperties
 import org.dkbrazz.model.dto.MeasureHistoryDTO
 import org.dkbrazz.model.dto.PowerMeasureDTO
 import org.dkbrazz.model.entity.PowerMeasure
@@ -18,7 +19,8 @@ import java.math.RoundingMode
 @Service
 class MeasureService(
     private val measureRepository: PowerMeasureRepository,
-    private val deviceRepository: DeviceRepository
+    private val deviceRepository: DeviceRepository,
+    private val props: ShellyProperties
 ) {
     private val logger = LoggerFactory.getLogger(MeasureService::class.java)
 
@@ -56,10 +58,13 @@ class MeasureService(
         val duration = Duration.between(start, end)
         val intervalSeconds = max(1.0, duration.toSeconds().toDouble() / measures)
         val bucketInterval = "$intervalSeconds seconds"
+        // Empty buckets are zero-filled only when the surrounding silence is at least this long;
+        // shorter gaps (sampling period > bucket size on small scales) stay NULL so graphs bridge them.
+        val gapThreshold = "${props.dashboard.offlineThreshold.toMillis() / 1000.0} seconds"
 
-        logger.debug("Calculating measure history for device $deviceId from $start to $end with $measures measures, bucket interval: $bucketInterval")
+        logger.debug("Calculating measure history for device $deviceId from $start to $end with $measures measures, bucket interval: $bucketInterval, gap threshold: $gapThreshold")
 
-        return measureRepository.findHistoryAggregated(deviceId, start, end, bucketInterval).map { p ->
+        return measureRepository.findHistoryAggregated(deviceId, start, end, bucketInterval, gapThreshold).map { p ->
             MeasureHistoryDTO(
                 time = p.getBucketTime().atOffset(ZoneOffset.UTC),
                 aVoltage = p.getAVoltage().roundToOne(),

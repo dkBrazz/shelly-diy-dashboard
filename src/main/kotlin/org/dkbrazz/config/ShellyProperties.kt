@@ -1,6 +1,7 @@
 package org.dkbrazz.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import java.time.Duration
 
 @ConfigurationProperties(prefix = "shelly")
 data class ShellyProperties(
@@ -21,7 +22,9 @@ data class ShellyProperties(
     }
 
     data class Dashboard(
-        var maxMeasures: Int = 150
+        var maxMeasures: Int = 150,
+        /** A silence between two samples at least this long is rendered as zero in history graphs. */
+        var offlineThreshold: Duration = Duration.ofSeconds(30)
     )
 
     val apiUrl: String
