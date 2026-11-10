@@ -4,7 +4,7 @@ A self-hosted dashboard that receives three-phase power measurements from Shelly
 
 ## Prerequisites
 
-- Java 24 (the Gradle toolchain resolver can provision it)
+- Java 25 (the Gradle toolchain resolver can provision it)
 - Node.js 22 or newer with npm
 - PostgreSQL 18 with TimescaleDB 2.25 or newer
 - Google OAuth client credentials

@@ -2,7 +2,7 @@
 
 ## Scope and stack
 
-These instructions apply to the entire repository. The application is a Kotlin 2.2 / Spring Boot 4 backend on Java 24 and a React 19 / TypeScript frontend built with Vite 7. PostgreSQL with TimescaleDB stores measurements.
+These instructions apply to the entire repository. The application is a Kotlin 2.4 / Spring Boot 4.1 backend on Java 25 and a React 19 / TypeScript frontend built with Vite 7. PostgreSQL with TimescaleDB stores measurements.
 
 ## Repository map
 
@@ -26,7 +26,7 @@ Run commands from the repository root unless noted otherwise.
 - Frontend development server: `cd frontend && npm run dev`
 - Production image: `docker build -t shelly-diy-dashboard .`
 
-The Gradle Java toolchain resolver can provision Java 24. Node 22 or newer is expected. Always use the Gradle wrapper and `npm ci`; update and commit `frontend/package-lock.json` whenever dependencies change.
+The Gradle Java toolchain resolver can provision Java 25. Node 22 or newer is expected. Always use the Gradle wrapper and `npm ci`; update and commit `frontend/package-lock.json` whenever dependencies change.
 
 ## Development workflow
 
