@@ -18,6 +18,7 @@ class MeasureServiceTest {
     private val deviceRepository = mock(DeviceRepository::class.java)
     private val props = ShellyProperties()
     private val measureService = MeasureService(measureRepository, deviceRepository, props)
+    private val defaultGapThreshold = "${props.dashboard.offlineThreshold.toMillis() / 1000.0} seconds"
 
     @Test
     fun `test interval calculation for 24 hours and 500 measures`() {
@@ -27,12 +28,12 @@ class MeasureServiceTest {
         
         // 86400 / 500 = 172.8
         
-        `when`(measureRepository.findHistoryAggregated(1, start, end, "172.8 seconds", "60.0 seconds"))
+        `when`(measureRepository.findHistoryAggregated(1, start, end, "172.8 seconds", defaultGapThreshold))
             .thenReturn(emptyList())
             
         measureService.getHistory(1, start, end, measures)
         
-        verify(measureRepository).findHistoryAggregated(1, start, end, "172.8 seconds", "60.0 seconds")
+        verify(measureRepository).findHistoryAggregated(1, start, end, "172.8 seconds", defaultGapThreshold)
     }
 
     @Test
@@ -43,12 +44,12 @@ class MeasureServiceTest {
         
         // 86400 / 100 = 864.0
         
-        `when`(measureRepository.findHistoryAggregated(1, start, end, "864.0 seconds", "60.0 seconds"))
+        `when`(measureRepository.findHistoryAggregated(1, start, end, "864.0 seconds", defaultGapThreshold))
             .thenReturn(emptyList())
             
         measureService.getHistory(1, start, end, measures)
         
-        verify(measureRepository).findHistoryAggregated(1, start, end, "864.0 seconds", "60.0 seconds")
+        verify(measureRepository).findHistoryAggregated(1, start, end, "864.0 seconds", defaultGapThreshold)
     }
 
     @Test
