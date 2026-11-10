@@ -99,7 +99,7 @@ const VoltageGraph: React.FC<VoltageGraphProps> = ({ data, range }) => {
           <Tooltip
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#f3f4f6' }}
             itemStyle={{ color: '#f3f4f6' }}
-            labelFormatter={(label) => formatDateTime(label)}
+            labelFormatter={(label) => (typeof label === 'number' || typeof label === 'string' ? formatDateTime(label) : label)}
             formatter={(value: unknown, name: unknown) => [value != null ? `${Number(value).toFixed(1)} V` : '--', String(name)]}
           />
           <Legend iconType="circle" />

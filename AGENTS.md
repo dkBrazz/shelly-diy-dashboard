@@ -2,7 +2,7 @@
 
 ## Scope and stack
 
-These instructions apply to the entire repository. The application is a Kotlin 2.4 / Spring Boot 4.1 backend on Java 25 and a React 19 / TypeScript frontend built with Vite 7. PostgreSQL with TimescaleDB stores measurements.
+These instructions apply to the entire repository. The application is a Kotlin 2.4 / Spring Boot 4.1 backend on Java 25 and a React 19 / TypeScript frontend built with Vite 8. PostgreSQL with TimescaleDB stores measurements.
 
 ## Repository map
 

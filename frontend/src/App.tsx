@@ -7,6 +7,58 @@ import { LayoutDashboard, RefreshCw, Zap, AlertCircle, LogOut, LogIn, User } fro
 import { formatTime, formatToQuery, parseFromQuery } from './utils/formatters';
 import { SCOPE_DURATIONS } from './types';
 
+class UnauthorizedError extends Error {
+  constructor() {
+    super('Unauthorized. Please log in.');
+    this.name = 'UnauthorizedError';
+  }
+}
+
+interface DashboardData {
+  devices: Device[] | null;
+  latestMeasures: Record<number, PowerMeasure>;
+}
+
+async function loadUser(): Promise<UserInfo | null> {
+  try {
+    const res = await fetch('/api/user/me');
+    return res.ok ? await res.json() : null;
+  } catch (err) {
+    console.error('Failed to fetch user:', err);
+    return null;
+  }
+}
+
+async function loadDashboard(): Promise<DashboardData> {
+  const [devicesRes, latestRes] = await Promise.all([
+    fetch('/api/devices'),
+    fetch('/api/devices/latest')
+  ]);
+
+  if (devicesRes.status === 401 || latestRes.status === 401) {
+    throw new UnauthorizedError();
+  }
+
+  if (!devicesRes.ok || !latestRes.ok) {
+    throw new Error('Failed to fetch data from server');
+  }
+
+  const devicesData: unknown = await devicesRes.json();
+  const latestData: unknown = await latestRes.json();
+
+  const latestMeasures: Record<number, PowerMeasure> = {};
+  if (Array.isArray(latestData)) {
+    (latestData as PowerMeasure[]).forEach((measure) => {
+      latestMeasures[measure.deviceId] = measure;
+    });
+  }
+
+  return {
+    devices: Array.isArray(devicesData) ? (devicesData as Device[]) : null,
+    latestMeasures
+  };
+}
+
 function App() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [latestMeasures, setLatestMeasures] = useState<Record<number, PowerMeasure>>({});
@@ -70,68 +122,32 @@ function App() {
     localStorage.setItem('selectedScope', scope);
   }, [scope, customRange]);
 
-  const fetchUser = async (): Promise<UserInfo | null> => {
-    try {
-      const res = await fetch('/api/user/me');
-      if (res.ok) {
-        const userData = await res.json();
-        setUser(userData);
-        return userData;
-      } else {
-        setUser(null);
-        return null;
-      }
-    } catch (err) {
-      console.error('Failed to fetch user:', err);
-      setUser(null);
-      return null;
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      const [devicesRes, latestRes] = await Promise.all([
-        fetch('/api/devices'),
-        fetch('/api/devices/latest')
-      ]);
-      
-      if (devicesRes.status === 401 || latestRes.status === 401) {
-        setError('Unauthorized. Please log in.');
-        setUser(null);
-        return;
-      }
-      
-      if (!devicesRes.ok || !latestRes.ok) {
-        throw new Error('Failed to fetch data from server');
-      }
-
-      const devicesData: Device[] = await devicesRes.json();
-      const latestData: PowerMeasure[] = await latestRes.json();
-      
-      if (Array.isArray(devicesData)) {
-        setDevices(devicesData);
-      }
-      
-      const latestMap: Record<number, PowerMeasure> = {};
-      if (Array.isArray(latestData)) {
-        latestData.forEach((measure) => {
-          latestMap[measure.deviceId] = measure;
-        });
-      }
-      setLatestMeasures(latestMap);
-      setLastUpdate(new Date());
-      setError(null);
-    } catch (err: Error | unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Connection error';
-      console.error('Failed to fetch data:', err);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchData = () =>
+    loadDashboard()
+      .then(({ devices, latestMeasures }) => {
+        if (devices) {
+          setDevices(devices);
+        }
+        setLatestMeasures(latestMeasures);
+        setLastUpdate(new Date());
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (err instanceof UnauthorizedError) {
+          setError(err.message);
+          setUser(null);
+          return;
+        }
+        const errorMessage = err instanceof Error ? err.message : 'Connection error';
+        console.error('Failed to fetch data:', err);
+        setError(errorMessage);
+      })
+      .finally(() => setLoading(false));
 
   useEffect(() => {
-    fetchUser().finally(() => setLoading(false));
+    loadUser()
+      .then(setUser)
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -243,6 +259,7 @@ function App() {
                 <DeviceCard 
                   device={device} 
                   latestMeasure={latestMeasures[device.id]} 
+                  now={lastUpdate}
                   scope={scope}
                   customRange={scope === 'custom' ? customRange : undefined}
                 />

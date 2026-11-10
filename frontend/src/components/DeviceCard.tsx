@@ -10,11 +10,13 @@ import { SCOPE_DURATIONS, SCOPE_LABELS } from '../types';
 interface DeviceCardProps {
   device: Device;
   latestMeasure?: PowerMeasure;
+  /** Reference time (when the latest measures were fetched) used to judge device staleness. */
+  now: Date;
   scope: Scope;
   customRange?: { start: string; end: string };
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope, customRange }) => {
+const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, now, scope, customRange }) => {
   const [history, setHistory] = useState<MeasureHistoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [historyRange, setHistoryRange] = useState<{ start: number; end: number } | null>(null);
@@ -61,7 +63,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, scope, c
     return () => clearInterval(interval);
   }, [device.id, scope, customRange]);
 
-  const isOnline = latestMeasure && (Date.now() - new Date(latestMeasure.time).getTime() < 60000);
+  const isOnline = latestMeasure && (now.getTime() - new Date(latestMeasure.time).getTime() < 60000);
 
   return (
     <div className="min-w-[380px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-xl transition-all hover:border-gray-700">
