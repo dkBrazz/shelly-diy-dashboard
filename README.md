@@ -51,6 +51,9 @@ flowchart LR
 ```
 
 - `ShellyWebSocketClient` keeps one WebSocket per configured Shelly region alive (ping/pong, timeouts, reconnects).
+  Multiple regions are intentional: a device shared with you by another Shelly user lives on *that* user's
+  server, so events for it never arrive on your own region. The Shelly Cloud control UI subscribes to every
+  region in the same way.
 - `ShellyEventProcessor` scales each sample by 1,000 and stores it as integers in the `power_measures` hypertable.
 - `/api/devices/{id}/history` aggregates with TimescaleDB `time_bucket_gapfill`, so graphs stay smooth at any zoom level.
 - `/actuator/health` is public and used by the container health check; everything else under `/api/**` requires login.
@@ -121,7 +124,7 @@ All settings are environment variables. `.env.example` lists every key; Docker C
 | `SHELLY_AUTH_CODE` | — | Authorization code from step 1. |
 | `SHELLY_CLIENT_ID` | `shelly-diy` | OAuth client id; keep the default unless Shelly issued you an integrator id. |
 | `SHELLY_REGION` | `shelly-241-eu` | Shelly server used to exchange the authorization code for an access token. |
-| `SHELLY_WEBSOCKET_REGIONS` | `shelly-241-eu,shelly-242-eu` | Regions monitored simultaneously for real-time events. |
+| `SHELLY_WEBSOCKET_REGIONS` | `shelly-241-eu,shelly-242-eu` | Regions monitored simultaneously for real-time events. Keep every region that hosts a device you can see in the Shelly app, including devices shared with you by users on other servers; a single region only covers devices registered to your own account. |
 | `APP_IMAGE_TAG` | `main` | Image tag pulled by Compose (`main`, a release tag such as `1.0.0`, or `sha-…`). |
 
 Dashboard behaviour (`shelly.dashboard.*` in `application.yml`): `max-measures` controls the number of history buckets per

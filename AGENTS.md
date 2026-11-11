@@ -46,6 +46,7 @@ The Gradle Java toolchain resolver can provision Java 25. Node 22 or newer is ex
 - History aggregation uses the TimescaleDB `time_bucket` function. Repository query changes need a Timescale-backed integration check or an explicit note that only unit tests ran.
 - `/api/**` is authenticated. Google OAuth users must also exist in the `users` table; preserving that allowlist is a security requirement. `UserAllowlistSeeder` only adds emails from `APP_ALLOWED_EMAILS` and never deletes rows; lookups are case-insensitive. Only `/actuator/health` and `/actuator/info` are public.
 - Shelly Cloud work happens through a scheduled WebSocket client and asynchronous event processing. Preserve reconnect state safety and avoid blocking the scheduler thread.
+- One WebSocket per region in `SHELLY_WEBSOCKET_REGIONS` is a requirement, not an inefficiency. Devices shared with the account owner by another Shelly user are hosted on that user's region and only emit events there; the Shelly Cloud control UI subscribes to all regions the same way. Never collapse the connections to the single `user_api_url` host of the token.
 - The Shelly authorization code and access token travel in URL query parameters (`code=`, `t=`) and therefore appear in Spring client exception messages. Never log such exceptions with a stack trace or re-throw them as a cause; use `describeSafely`/`redactSecrets` from `org.dkbrazz.util`.
 - `schema.sql` runs on every startup. Prefer additive, idempotent SQL and explain migration implications for existing installations.
 

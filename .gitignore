@@ -57,3 +57,4 @@ src/main/resources/static
 .env
 .env.*
 !.env.example
+/docs/ROADMAP.md
