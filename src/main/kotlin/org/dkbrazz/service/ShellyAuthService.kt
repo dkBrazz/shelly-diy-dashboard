@@ -6,8 +6,17 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
 import tools.jackson.databind.ObjectMapper
+import java.net.URI
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
+
+/** Claims this application reads from Shelly's JWTs; both the authorization code and the access token carry them. */
+data class ShellyTokenClaims(
+    /** Expiry as epoch milliseconds, or null when the token has no `exp` claim. */
+    val expiresAtMillis: Long?,
+    /** Designated API server of the authorizing user, e.g. `https://shelly-241-eu.shelly.cloud`. */
+    val userApiUrl: String?
+)
 
 @Service
 class ShellyAuthService(
@@ -17,6 +26,21 @@ class ShellyAuthService(
 ) {
     private val logger = LoggerFactory.getLogger(ShellyAuthService::class.java)
     private val tokenCache = AtomicReference<AccessTokenInfo?>()
+
+    /**
+     * Base URL of the account's designated Shelly server. Shelly requires HTTP calls to address the host from the
+     * `user_api_url` claim of the authorization code; `SHELLY_REGION` only remains as a deprecated override.
+     */
+    val apiUrl: String = resolveApiUrl()
+
+    /** Region label of [apiUrl]. The account's own devices only emit events on this region's WebSocket. */
+    val accountRegion: String = ShellyProperties.regionOf(
+        URI(apiUrl).host ?: throw IllegalStateException("Shelly API URL has no host: $apiUrl")
+    )
+
+    init {
+        logger.info("Shelly Cloud API server: $apiUrl (region $accountRegion)")
+    }
 
     fun getAccessToken(): String {
         val currentToken = tokenCache.get()
@@ -40,7 +64,7 @@ class ShellyAuthService(
             // URI variables are strictly percent-encoded, as the Shelly docs require for the code.
             val response = restClient.get()
                 .uri(
-                    "${props.apiUrl}/oauth/auth?client_id={clientId}&grant_type=code&code={code}",
+                    "$apiUrl/oauth/auth?client_id={clientId}&grant_type=code&code={code}",
                     props.cloud.clientId,
                     props.cloud.authCode
                 )
@@ -68,18 +92,54 @@ class ShellyAuthService(
         return System.currentTimeMillis() > (info.exp - 60000)
     }
 
+    private fun resolveApiUrl(): String {
+        val override = props.cloud.region ?: return resolveUserApiUrl(props.cloud.authCode)
+        logger.warn(
+            "SHELLY_REGION is deprecated: the Shelly server is derived from the authorization code's " +
+                "user_api_url claim. Remove the variable unless the derived server is wrong."
+        )
+        return props.apiUrl(override)
+    }
+
+    /**
+     * The authorization code is itself a JWT. Exceptions deliberately carry neither the code nor the
+     * parser's message, because the latter may quote the decoded payload.
+     */
+    private fun resolveUserApiUrl(authCode: String): String {
+        val claims = try {
+            decodeClaims(authCode)
+        } catch (e: Exception) {
+            throw IllegalStateException(
+                "SHELLY_AUTH_CODE is not a decodable Shelly JWT (${e.javaClass.simpleName}); " +
+                    "obtain a fresh authorization code or set SHELLY_REGION to your Shelly server"
+            )
+        }
+        return (claims.userApiUrl ?: throw IllegalStateException(
+            "SHELLY_AUTH_CODE carries no user_api_url claim; " +
+                "set SHELLY_REGION to the server shown next to your authorization key in the Shelly app"
+        )).trimEnd('/')
+    }
+
     private fun decodeExp(token: String): Long {
         try {
-            val parts = token.split(".")
-            if (parts.size != 3) throw IllegalArgumentException("Invalid JWT format")
-            val payload = String(Base64.getUrlDecoder().decode(parts[1]))
-            val node = objectMapper.readTree(payload)
-            return node["exp"].asLong() * 1000
+            return decodeClaims(token).expiresAtMillis
+                ?: throw IllegalArgumentException("Access token has no exp claim")
         } catch (e: Exception) {
-            logger.error("Failed to decode JWT expiration: ${e.message}")
+            logger.error("Failed to decode JWT expiration: ${describeSafely(e)}")
             // Fallback to a short life if we can't parse it
             return System.currentTimeMillis() + 3600000
         }
+    }
+
+    private fun decodeClaims(token: String): ShellyTokenClaims {
+        val parts = token.split(".")
+        require(parts.size == 3) { "Invalid JWT format" }
+        val payload = String(Base64.getUrlDecoder().decode(parts[1]), Charsets.UTF_8)
+        val node = objectMapper.readTree(payload)
+        return ShellyTokenClaims(
+            expiresAtMillis = node.get("exp")?.takeIf { it.isNumber }?.asLong()?.times(1000),
+            userApiUrl = node.get("user_api_url")?.takeIf { it.isString }?.stringValue()?.trim()?.takeIf { it.isNotEmpty() }
+        )
     }
 
     private data class AccessTokenInfo(val token: String, val exp: Long)

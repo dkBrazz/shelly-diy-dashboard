@@ -22,17 +22,67 @@ import java.util.Base64
 
 @ExtendWith(OutputCaptureExtension::class)
 class ShellyAuthServiceTest {
-    private val authCode = "secret+auth/code=="
+    // The code is a JWT; its (opaque) signature carries characters that must be strictly percent-encoded.
+    private val authCode = jwt(exp = 0, userApiUrl = "https://shelly-243-eu.shelly.cloud", signature = "secret+auth/code==")
+    private val encodedAuthCode = authCode.substringBeforeLast('.') + ".secret%2Bauth%2Fcode%3D%3D"
     private val expectedUrl =
-        "https://shelly-241-eu.shelly.cloud/oauth/auth?client_id=shelly-diy&grant_type=code&code=secret%2Bauth%2Fcode%3D%3D"
+        "https://shelly-243-eu.shelly.cloud/oauth/auth?client_id=shelly-diy&grant_type=code&code=$encodedAuthCode"
 
     private val builder = RestClient.builder()
     private val server = MockRestServiceServer.bindTo(builder).build()
-    private val service = ShellyAuthService(
-        ShellyProperties().apply { cloud.authCode = authCode },
+    private val service = service()
+
+    private fun service(configure: ShellyProperties.() -> Unit = {}) = ShellyAuthService(
+        ShellyProperties().apply { cloud.authCode = authCode }.apply(configure),
         JsonMapper.builder().build(),
         builder.build()
     )
+
+    @Test
+    fun `derives the token exchange server and account region from the auth code`() {
+        assertEquals("https://shelly-243-eu.shelly.cloud", service.apiUrl)
+        assertEquals("shelly-243-eu", service.accountRegion)
+    }
+
+    @Test
+    fun `SHELLY_REGION override replaces the derived server and logs a deprecation warning`(output: CapturedOutput) {
+        val overridden = service { cloud.region = "shelly-override-eu" }
+        val token = jwt(exp = System.currentTimeMillis() / 1000 + 3600)
+        server.expect(requestTo("https://shelly-override-eu.shelly.cloud/oauth/auth?client_id=shelly-diy&grant_type=code&code=$encodedAuthCode"))
+            .andRespond(withSuccess("""{"access_token":"$token"}""", MediaType.APPLICATION_JSON))
+
+        assertEquals(token, overridden.getAccessToken())
+        assertEquals("shelly-override-eu", overridden.accountRegion)
+        assertTrue(output.all.contains("SHELLY_REGION is deprecated"))
+        server.verify()
+    }
+
+    @Test
+    fun `auth code without user_api_url fails fast without echoing the code`() {
+        val code = jwt(exp = 0, userApiUrl = null, signature = "secret+auth/code==")
+
+        val error = assertThrows(IllegalStateException::class.java) {
+            service { cloud.authCode = code }
+        }
+
+        assertTrue(error.message!!.contains("user_api_url"))
+        assertTrue(error.message!!.contains("SHELLY_REGION"))
+        assertFalse(error.message!!.contains(code))
+        assertFalse(error.message!!.contains(code.substringAfterLast('.')))
+    }
+
+    @Test
+    fun `auth code that is not a JWT fails fast without echoing the code`() {
+        val code = "secret+auth/code=="
+
+        val error = assertThrows(IllegalStateException::class.java) {
+            service { cloud.authCode = code }
+        }
+
+        assertNull(error.cause)
+        assertTrue(error.message!!.contains("not a decodable Shelly JWT"))
+        assertFalse(error.message!!.contains(code))
+    }
 
     @Test
     fun `exchanges a strictly encoded auth code and caches the token until expiry`() {
@@ -85,10 +135,19 @@ class ShellyAuthServiceTest {
         assertFalse(output.all.contains(authCode))
     }
 
-    private fun jwt(exp: Long): String {
+    private fun jwt(
+        exp: Long,
+        userApiUrl: String? = "https://shelly-241-eu.shelly.cloud",
+        signature: String = "signature"
+    ): String {
         val encoder = Base64.getUrlEncoder().withoutPadding()
         val header = encoder.encodeToString("""{"alg":"HS256","typ":"JWT"}""".toByteArray())
-        val payload = encoder.encodeToString("""{"exp":$exp,"user_api_url":"https://shelly-241-eu.shelly.cloud"}""".toByteArray())
-        return "$header.$payload.signature"
+        val claims = buildString {
+            append("""{"exp":$exp""")
+            if (userApiUrl != null) append(""","user_api_url":"$userApiUrl"""")
+            append("}")
+        }
+        val payload = encoder.encodeToString(claims.toByteArray())
+        return "$header.$payload.$signature"
     }
 }

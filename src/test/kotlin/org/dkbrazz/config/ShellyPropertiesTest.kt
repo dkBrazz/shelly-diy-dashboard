@@ -1,6 +1,7 @@
 package org.dkbrazz.config
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.springframework.boot.context.properties.bind.Bindable
@@ -71,15 +72,31 @@ class ShellyPropertiesTest {
     }
 
     @Test
-    fun `oauth region is independent from websocket regions`() {
-        val properties = ShellyProperties()
-        properties.cloud.region = "shelly-auth-eu"
-        properties.cloud.websocketRegions = listOf("shelly-events-eu")
+    fun `region override is unset by default and ignores blank values`() {
+        assertNull(ShellyProperties().cloud.region)
 
-        assertEquals("https://shelly-auth-eu.shelly.cloud", properties.apiUrl)
+        val blank = Binder(MapConfigurationPropertySource(mapOf("shelly.cloud.region" to " ")))
+            .bind("shelly", Bindable.of(ShellyProperties::class.java))
+            .get()
+        val set = Binder(MapConfigurationPropertySource(mapOf("shelly.cloud.region" to " shelly-243-eu ")))
+            .bind("shelly", Bindable.of(ShellyProperties::class.java))
+            .get()
+
+        assertNull(blank.cloud.region)
+        assertEquals("shelly-243-eu", set.cloud.region)
+    }
+
+    @Test
+    fun `builds api and websocket urls from a region label or a full host`() {
+        val properties = ShellyProperties()
+
+        assertEquals("https://shelly-auth-eu.shelly.cloud", properties.apiUrl("shelly-auth-eu"))
         assertEquals(
             "wss://shelly-events-eu.shelly.cloud:6113/shelly/wss/hk_sock",
             properties.websocketUrl("shelly-events-eu")
         )
+        assertEquals("wss://api.example.com:6113/shelly/wss/hk_sock", properties.websocketUrl("api.example.com"))
+        assertEquals("shelly-241-eu", ShellyProperties.regionOf("shelly-241-eu.shelly.cloud"))
+        assertEquals("api.example.com", ShellyProperties.regionOf("api.example.com"))
     }
 }

@@ -211,7 +211,32 @@ class ShellyWebSocketClientTest {
         assertEquals(1, attempts.countForRegion("shelly-243-eu"))
     }
 
-    private class Harness(regions: List<String> = listOf("shelly-241-eu", "shelly-242-eu")) {
+    @Test
+    fun `account region from the token is monitored even when the configured list omits it`() {
+        val harness = Harness(listOf("shelly-241-eu", "shelly-242-eu"), accountRegion = "shelly-243-eu")
+
+        harness.client.checkConnection()
+        val attempts = harness.connector.awaitAttempts(3)
+
+        assertEquals(1, attempts.countForRegion("shelly-241-eu"))
+        assertEquals(1, attempts.countForRegion("shelly-242-eu"))
+        assertEquals(1, attempts.countForRegion("shelly-243-eu"))
+    }
+
+    @Test
+    fun `account region already in the configured list is connected once`() {
+        val harness = Harness(listOf("shelly-242-eu"), accountRegion = "shelly-242-eu")
+
+        harness.client.checkConnection()
+        val attempts = harness.connector.awaitAttempts(1)
+
+        assertEquals(1, attempts.countForRegion("shelly-242-eu"))
+    }
+
+    private class Harness(
+        regions: List<String> = listOf("shelly-241-eu", "shelly-242-eu"),
+        accountRegion: String = "shelly-241-eu"
+    ) {
         val authService: ShellyAuthService = mock(ShellyAuthService::class.java)
         val eventProcessor: ShellyEventProcessor = mock(ShellyEventProcessor::class.java)
         val objectMapper: ObjectMapper = mock(ObjectMapper::class.java)
@@ -223,6 +248,7 @@ class ShellyWebSocketClientTest {
             val properties = ShellyProperties()
             properties.cloud.websocketRegions = regions
             `when`(authService.getAccessToken()).thenReturn("shared-token")
+            `when`(authService.accountRegion).thenReturn(accountRegion)
             client = ShellyWebSocketClient(
                 properties,
                 authService,

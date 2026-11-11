@@ -56,7 +56,16 @@ class ShellyWebSocketClient(
 
     private val logger = LoggerFactory.getLogger(ShellyWebSocketClient::class.java)
     private val stopping = AtomicBoolean(false)
-    private val connections = props.cloud.websocketRegions.associateWith { RegionConnectionState(clock.millis()) }
+
+    // The account's own region (from the token's user_api_url) is always monitored; devices shared by
+    // users on other regions only emit events there, hence the additional configured regions.
+    private val connections = (props.cloud.websocketRegions + authService.accountRegion)
+        .distinct()
+        .associateWith { RegionConnectionState(clock.millis()) }
+
+    init {
+        logger.info("Monitoring Shelly Cloud WebSocket regions: ${connections.keys}")
+    }
 
     @Scheduled(fixedDelay = CHECK_DELAY_MS)
     fun checkConnection() {

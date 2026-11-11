@@ -76,8 +76,9 @@ The dashboard authenticates to Shelly Cloud with the public `shelly-diy` OAuth c
 2. After login the browser is redirected to `http://localhost:8080/?code=...`. Nothing is listening there yet,
    so the page shows a connection error — that is expected. Copy the value of the `code` parameter from the
    address bar; it is your `SHELLY_AUTH_CODE`.
-3. Find your Shelly server in the Shelly app under **User settings → Authorization cloud key** (for example
-   `shelly-241-eu.shelly.cloud`). Its first label (`shelly-241-eu`) is your `SHELLY_REGION`.
+3. The code is a JWT whose `user_api_url` claim names your Shelly server (for example
+   `shelly-241-eu.shelly.cloud`). The dashboard reads it from the code, uses it for the token exchange and
+   always monitors that region for events, so no region has to be configured for your own devices.
 
 Treat the code like a password: anyone holding it can control your devices. Repeat this step if the
 dashboard logs `Failed to refresh Shelly access token`.
@@ -95,7 +96,7 @@ dashboard logs `Failed to refresh Shelly access token`.
 
 ```bash
 cp .env.example .env
-# edit .env: database password, Google client, APP_ALLOWED_EMAILS, Shelly code and region
+# edit .env: database password, Google client, APP_ALLOWED_EMAILS, Shelly code
 docker compose up -d
 ```
 
@@ -123,8 +124,8 @@ All settings are environment variables. `.env.example` lists every key; Docker C
 | `APP_PORT` | `8080` | Host port for the dashboard under Compose. |
 | `SHELLY_AUTH_CODE` | — | Authorization code from step 1. |
 | `SHELLY_CLIENT_ID` | `shelly-diy` | OAuth client id; keep the default unless Shelly issued you an integrator id. |
-| `SHELLY_REGION` | `shelly-241-eu` | Shelly server used to exchange the authorization code for an access token. |
-| `SHELLY_WEBSOCKET_REGIONS` | `shelly-241-eu,shelly-242-eu` | Regions monitored simultaneously for real-time events. Keep every region that hosts a device you can see in the Shelly app, including devices shared with you by users on other servers; a single region only covers devices registered to your own account. |
+| `SHELLY_WEBSOCKET_REGIONS` | `shelly-241-eu,shelly-242-eu` | Additional regions monitored for real-time events; the region from the code's `user_api_url` is always included. Keep every region that hosts a device you can see in the Shelly app, including devices shared with you by users on other servers; your own region alone only covers devices registered to your account. |
+| `SHELLY_REGION` | unset | Deprecated override of the Shelly server used for the token exchange. Normally derived from the authorization code; setting it logs a warning. |
 | `APP_IMAGE_TAG` | `main` | Image tag pulled by Compose (`main`, a release tag such as `1.0.0`, or `sha-…`). |
 
 Dashboard behaviour (`shelly.dashboard.*` in `application.yml`): `max-measures` caps the number of history buckets per
