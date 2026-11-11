@@ -1,6 +1,6 @@
 services:
   app:
-    # Published by .github/workflows/main.yml. Run `docker compose build` to build locally instead.
+    # Published to GHCR by .github/workflows/ci.yml after the checks pass. Run `docker compose build` to build locally instead.
     image: ghcr.io/dkbrazz/shelly-diy-dashboard:${APP_IMAGE_TAG:-main}
     build: .
     pull_policy: missing

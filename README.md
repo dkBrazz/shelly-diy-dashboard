@@ -1,7 +1,7 @@
 # Shelly DIY Dashboard
 
-[![Code checks](https://github.com/dkBrazz/shelly-diy-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/dkBrazz/shelly-diy-dashboard/actions/workflows/ci.yml)
-[![Docker image](https://github.com/dkBrazz/shelly-diy-dashboard/actions/workflows/main.yml/badge.svg)](https://github.com/dkBrazz/shelly-diy-dashboard/pkgs/container/shelly-diy-dashboard)
+[![CI](https://github.com/dkBrazz/shelly-diy-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/dkBrazz/shelly-diy-dashboard/actions/workflows/ci.yml)
+[![Docker image](https://img.shields.io/badge/ghcr.io-shelly--diy--dashboard-blue?logo=docker&logoColor=white)](https://github.com/dkBrazz/shelly-diy-dashboard/pkgs/container/shelly-diy-dashboard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A self-hosted dashboard for Shelly three-phase energy meters. It subscribes to the
