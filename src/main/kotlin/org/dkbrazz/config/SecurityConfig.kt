@@ -16,6 +16,9 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.HttpStatusEntryPoint
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
 import org.springframework.http.HttpStatus
 import org.springframework.security.web.util.matcher.RequestMatcher
 
@@ -61,12 +64,21 @@ class SecurityConfig(private val userAuthService: UserAuthorizationService) {
                     }
             }
             .logout { logout ->
+                // With CSRF enabled Spring Security only accepts POST /logout; the SPA sends it
+                // with the X-XSRF-TOKEN header (see frontend/src/api.ts).
                 logout
                     .logoutSuccessUrl("/")
                     .permitAll()
             }
-            .csrf { csrf -> csrf.disable() }
-            
+            .csrf { csrf ->
+                // The token lives in a readable XSRF-TOKEN cookie that the SPA echoes back verbatim
+                // in X-XSRF-TOKEN, hence the plain (non-XOR) request handler.
+                csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .csrfTokenRequestHandler(CsrfTokenRequestAttributeHandler())
+            }
+            .addFilterAfter(CsrfCookieFilter(), BasicAuthenticationFilter::class.java)
+
         return http.build()
     }
 
