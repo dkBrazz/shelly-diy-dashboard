@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Device, PowerMeasure, MeasureHistoryDTO, Scope } from '../types';
+import { apiFetch } from '../api';
 import MeasureTile from './MeasureTile';
 import VoltageGraph from './VoltageGraph';
 import CurrentGraph from './CurrentGraph';
@@ -38,7 +39,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, now, sco
           end = new Date(endTime).toISOString();
           start = new Date(startTime).toISOString();
         }
-        const response = await fetch(`/api/devices/${device.id}/history?start=${start}&end=${end}`);
+        const response = await apiFetch(`/api/devices/${device.id}/history?start=${start}&end=${end}`);
         if (!response.ok) {
            throw new Error(`Server returned ${response.status}`);
         }

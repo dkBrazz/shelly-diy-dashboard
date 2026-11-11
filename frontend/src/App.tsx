@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Device, PowerMeasure, UserInfo, Scope } from './types';
+import { apiFetch, logout } from './api';
 import DeviceCard from './components/DeviceCard';
 import ScopeSwitcher from './components/ScopeSwitcher';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -21,7 +22,7 @@ interface DashboardData {
 
 async function loadUser(): Promise<UserInfo | null> {
   try {
-    const res = await fetch('/api/user/me');
+    const res = await apiFetch('/api/user/me');
     return res.ok ? await res.json() : null;
   } catch (err) {
     console.error('Failed to fetch user:', err);
@@ -31,8 +32,8 @@ async function loadUser(): Promise<UserInfo | null> {
 
 async function loadDashboard(): Promise<DashboardData> {
   const [devicesRes, latestRes] = await Promise.all([
-    fetch('/api/devices'),
-    fetch('/api/devices/latest')
+    apiFetch('/api/devices'),
+    apiFetch('/api/devices/latest')
   ]);
 
   if (devicesRes.status === 401 || latestRes.status === 401) {
@@ -66,6 +67,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [user, setUser] = useState<UserInfo | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [scope, setScope] = useState<Scope>(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const s = searchParams.get('scope') as Scope;
@@ -161,6 +163,14 @@ function App() {
     return () => clearInterval(interval);
   }, [user]);
 
+  const handleLogout = () => {
+    setLoggingOut(true);
+    logout()
+      .catch((err: unknown) => console.error('Failed to log out:', err))
+      // Reload from the server either way so the UI reflects the real session state.
+      .finally(() => window.location.assign('/'));
+  };
+
   return (
     <div className="min-h-screen w-full bg-black text-gray-100 font-sans p-4 md:p-8">
       {/* Navbar */}
@@ -193,13 +203,16 @@ function App() {
                    <span className="text-[10px] text-gray-500 block uppercase font-bold">Logged in as</span>
                    <span className="text-xs font-bold text-gray-300">{user.name || user.email}</span>
                  </div>
-                 <a 
-                   href="/logout" 
-                   className="p-2 hover:bg-gray-800 rounded-lg transition-colors group text-gray-400 hover:text-red-400"
+                 <button
+                   type="button"
+                   onClick={handleLogout}
+                   disabled={loggingOut}
+                   className="p-2 hover:bg-gray-800 rounded-lg transition-colors group text-gray-400 hover:text-red-400 cursor-pointer disabled:opacity-50 disabled:cursor-wait"
                    title="Logout"
+                   aria-label="Logout"
                  >
                    <LogOut className="w-5 h-5" />
-                 </a>
+                 </button>
                </div>
              ) : (
                <a 

@@ -54,7 +54,10 @@ describe('DeviceCard', () => {
 
     // History is fetched for the device and the empty result renders the placeholder.
     expect(await screen.findAllByText('No historical data available')).toHaveLength(2);
-    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/^\/api\/devices\/7\/history\?start=.+&end=.+$/));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/api\/devices\/7\/history\?start=.+&end=.+$/),
+      expect.objectContaining({ credentials: 'same-origin' }),
+    );
   });
 
   it('shows the zero-padded hex form for a decimal external id', async () => {
