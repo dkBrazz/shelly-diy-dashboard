@@ -78,8 +78,8 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, now, sco
             <h3 className="font-bold text-gray-100">{device.name || device.code || 'Shelly Device'}</h3>
             <p className="text-xs text-gray-500 font-mono">ID: {device.externalId}</p>
             {hexId && <p className="text-xs text-gray-500 font-mono">Hex: {hexId}</p>}
-            <p className="text-xs text-gray-500 font-mono">Code: {device.code}</p>
-            <p className="text-xs text-gray-400 font-mono">Gen: {device.gen || 'N/A'}</p>
+            <p className="text-xs text-gray-500 font-mono">Code: {device.code ?? 'N/A'}</p>
+            <p className="text-xs text-gray-400 font-mono">Gen: {device.gen ?? 'N/A'}</p>
           </div>
         </div>
         <div className="flex flex-col items-end space-y-2">

@@ -1,10 +1,12 @@
+// Mirrors org.dkbrazz.model.entity.Device. `id` is `Int?` in Kotlin only because it is
+// DB-generated; it is always set on rows returned by the API.
 export interface Device {
   id: number;
   externalId: string;
-  type: string;
-  code: string;
-  name?: string;
-  gen: string;
+  type: string | null;
+  code: string | null;
+  name: string | null;
+  gen: string | null;
   createdAt: string;
 }
 
