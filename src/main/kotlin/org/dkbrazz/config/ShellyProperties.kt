@@ -23,6 +23,8 @@ data class ShellyProperties(
 
     data class Dashboard(
         var maxMeasures: Int = 150,
+        /** Longest history window a single request may cover. */
+        var maxRange: Duration = Duration.ofDays(90),
         /** A silence between two samples at least this long is rendered as zero in history graphs. */
         var offlineThreshold: Duration = Duration.ofSeconds(30)
     )

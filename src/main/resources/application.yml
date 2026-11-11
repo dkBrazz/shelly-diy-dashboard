@@ -59,5 +59,7 @@ shelly:
     client-id: ${SHELLY_CLIENT_ID:shelly-diy}
   dashboard:
     max-measures: 150
+    # Longest history window a single request may cover; wider ranges are rejected with 400.
+    max-range: 90d
     # Gaps between samples shorter than this are bridged in graphs; longer silences are drawn as zero.
     offline-threshold: 30s

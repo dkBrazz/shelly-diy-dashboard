@@ -127,8 +127,10 @@ All settings are environment variables. `.env.example` lists every key; Docker C
 | `SHELLY_WEBSOCKET_REGIONS` | `shelly-241-eu,shelly-242-eu` | Regions monitored simultaneously for real-time events. Keep every region that hosts a device you can see in the Shelly app, including devices shared with you by users on other servers; a single region only covers devices registered to your own account. |
 | `APP_IMAGE_TAG` | `main` | Image tag pulled by Compose (`main`, a release tag such as `1.0.0`, or `sha-…`). |
 
-Dashboard behaviour (`shelly.dashboard.*` in `application.yml`): `max-measures` controls the number of history buckets per
-request (150) and `offline-threshold` the silence after which a gap is drawn as zero instead of being bridged (30 s).
+Dashboard behaviour (`shelly.dashboard.*` in `application.yml`): `max-measures` caps the number of history buckets per
+request (150; larger `measures` values are clamped), `max-range` the widest history window a single request may cover
+(90 days; wider or inverted ranges are rejected with HTTP 400) and `offline-threshold` the silence after which a gap is
+drawn as zero instead of being bridged (30 s).
 
 ## Running from source
 
