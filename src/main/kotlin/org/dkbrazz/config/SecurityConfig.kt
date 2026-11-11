@@ -1,8 +1,10 @@
 package org.dkbrazz.config
 
+import jakarta.servlet.http.HttpServletRequest
 import org.dkbrazz.service.UserAuthorizationService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest
@@ -21,6 +23,17 @@ import org.springframework.security.web.util.matcher.RequestMatcher
 @EnableWebSecurity
 class SecurityConfig(private val userAuthService: UserAuthorizationService) {
 
+    /**
+     * Browser navigations to SPA routes such as `/device/3`, which [WebConfig] answers with
+     * `index.html`: GET requests whose path contains no dot. Static assets are dotted and have
+     * their own rules, and the API and actuator prefixes are matched before this so they stay
+     * authenticated. `PathPatternRequestMatcher` cannot express "no dot in any segment" because
+     * a double wildcard is only allowed at the end of a pattern, hence the hand-written matcher.
+     */
+    private val spaDeepLink = RequestMatcher { request ->
+        HttpMethod.GET.matches(request.method) && '.' !in pathWithinApplication(request)
+    }
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
@@ -28,6 +41,8 @@ class SecurityConfig(private val userAuthService: UserAuthorizationService) {
                 auth
                     .requestMatchers("/", "/index.html", "/static/**", "/assets/**", "/favicon.svg").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                    .requestMatchers("/api/**", "/actuator/**").authenticated()
+                    .requestMatchers(spaDeepLink).permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling { exceptions ->
@@ -54,6 +69,9 @@ class SecurityConfig(private val userAuthService: UserAuthorizationService) {
             
         return http.build()
     }
+
+    private fun pathWithinApplication(request: HttpServletRequest): String =
+        request.requestURI.removePrefix(request.contextPath)
 
     @Bean
     fun oidcUserService(): OAuth2UserService<OidcUserRequest, OidcUser> {
