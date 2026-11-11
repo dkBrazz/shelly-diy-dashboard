@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.context.properties.bind.Bindable
 import org.springframework.boot.context.properties.bind.Binder
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource
+import java.time.Duration
 
 class ShellyPropertiesTest {
     @Test
@@ -43,6 +44,30 @@ class ShellyPropertiesTest {
         assertThrows(IllegalArgumentException::class.java) {
             properties.cloud.websocketRegions = listOf(" ", "")
         }
+    }
+
+    @Test
+    fun `defaults dashboard limits to 150 measures over at most 90 days`() {
+        val properties = ShellyProperties()
+
+        assertEquals(150, properties.dashboard.maxMeasures)
+        assertEquals(Duration.ofDays(90), properties.dashboard.maxRange)
+    }
+
+    @Test
+    fun `binds dashboard max range as a duration`() {
+        val source = MapConfigurationPropertySource(
+            mapOf(
+                "shelly.dashboard.max-measures" to "300",
+                "shelly.dashboard.max-range" to "14d"
+            )
+        )
+        val properties = Binder(source)
+            .bind("shelly", Bindable.of(ShellyProperties::class.java))
+            .get()
+
+        assertEquals(300, properties.dashboard.maxMeasures)
+        assertEquals(Duration.ofDays(14), properties.dashboard.maxRange)
     }
 
     @Test

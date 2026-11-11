@@ -7,7 +7,10 @@ import org.dkbrazz.model.entity.Device
 import org.dkbrazz.service.DeviceService
 import org.dkbrazz.service.MeasureService
 import org.springframework.format.annotation.DateTimeFormat
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
+import java.time.Duration
 import java.time.OffsetDateTime
 
 @RestController
@@ -34,7 +37,17 @@ class DashboardController(
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) end: OffsetDateTime,
         @RequestParam(required = false) measures: Int?
     ): List<MeasureHistoryDTO> {
-        val limit = measures ?: props.dashboard.maxMeasures
+        val dashboard = props.dashboard
+        if (!start.isBefore(end)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "start must be before end")
+        }
+        if (Duration.between(start, end) > dashboard.maxRange) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Requested range exceeds the maximum of ${dashboard.maxRange}"
+            )
+        }
+        val limit = (measures ?: dashboard.maxMeasures).coerceIn(1, dashboard.maxMeasures)
         return measureService.getHistory(deviceId, start, end, limit)
     }
 }
