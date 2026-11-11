@@ -1,6 +1,7 @@
 package org.dkbrazz.service
 
 import org.dkbrazz.config.ShellyProperties
+import org.dkbrazz.util.describeSafely
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
@@ -11,10 +12,10 @@ import java.util.concurrent.atomic.AtomicReference
 @Service
 class ShellyAuthService(
     private val props: ShellyProperties,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val restClient: RestClient
 ) {
     private val logger = LoggerFactory.getLogger(ShellyAuthService::class.java)
-    private val restClient = RestClient.create()
     private val tokenCache = AtomicReference<AccessTokenInfo?>()
 
     fun getAccessToken(): String {
@@ -36,22 +37,29 @@ class ShellyAuthService(
 
         logger.info("Refreshing Shelly Cloud access token using auth code")
         try {
+            // URI variables are strictly percent-encoded, as the Shelly docs require for the code.
             val response = restClient.get()
-                .uri("${props.apiUrl}/oauth/auth?client_id=${props.cloud.clientId}&grant_type=code&code=${props.cloud.authCode}")
+                .uri(
+                    "${props.apiUrl}/oauth/auth?client_id={clientId}&grant_type=code&code={code}",
+                    props.cloud.clientId,
+                    props.cloud.authCode
+                )
                 .retrieve()
                 .body(Map::class.java)
 
             val accessToken = response?.get("access_token") as? String
-                ?: throw IllegalStateException("Access token missing in response: $response")
+                ?: throw IllegalStateException("Access token missing in response (keys: ${response?.keys})")
 
             val exp = decodeExp(accessToken)
-            val info = AccessTokenInfo(accessToken, exp)
-            tokenCache.set(info)
+            tokenCache.set(AccessTokenInfo(accessToken, exp))
             logger.info("New access token retrieved, expires at: ${Date(exp)}")
             return accessToken
         } catch (e: Exception) {
-            logger.error("Failed to refresh access token: ${e.message}", e)
-            throw e
+            // Spring's client exceptions embed the request URL, which carries the auth code.
+            // Re-throw a sanitized exception without the cause so no stack trace can leak it.
+            val reason = "${e.javaClass.simpleName}: ${describeSafely(e)}"
+            logger.error("Failed to refresh Shelly access token: $reason")
+            throw IllegalStateException("Failed to refresh Shelly access token: $reason")
         }
     }
 
@@ -70,7 +78,7 @@ class ShellyAuthService(
         } catch (e: Exception) {
             logger.error("Failed to decode JWT expiration: ${e.message}")
             // Fallback to a short life if we can't parse it
-            return System.currentTimeMillis() + 3600000 
+            return System.currentTimeMillis() + 3600000
         }
     }
 

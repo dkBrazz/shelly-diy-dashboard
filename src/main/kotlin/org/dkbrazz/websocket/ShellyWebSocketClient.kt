@@ -5,6 +5,7 @@ import org.dkbrazz.config.ShellyProperties
 import org.dkbrazz.model.dto.ShellyEvent
 import org.dkbrazz.service.ShellyAuthService
 import org.dkbrazz.service.ShellyEventProcessor
+import org.dkbrazz.util.describeSafely
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -34,7 +35,6 @@ class ShellyWebSocketClient(
         private const val IDLE_PING_AFTER_MS = 30_000L
         private const val PONG_TIMEOUT_MS = 10_000L
         private const val CONNECT_TIMEOUT_MS = 15_000L
-        private val TOKEN_QUERY_PATTERN = Regex("([?&]t=)[^&\\s]+")
     }
 
     private class RegionConnectionState(now: Long) {
@@ -364,10 +364,7 @@ class ShellyWebSocketClient(
         }
     }
 
-    private fun safeError(throwable: Throwable): String {
-        val message = throwable.message?.let { TOKEN_QUERY_PATTERN.replace(it, "$1<redacted>") }
-        return if (message.isNullOrBlank()) throwable.javaClass.simpleName else message
-    }
+    private fun safeError(throwable: Throwable): String = describeSafely(throwable)
 
     @PreDestroy
     fun shutdown() {

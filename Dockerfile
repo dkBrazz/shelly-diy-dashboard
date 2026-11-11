@@ -56,6 +56,10 @@ COPY --from=extractor /app/extracted/application/ ./
 # Expose the application port (default for Spring Boot is 8080)
 EXPOSE 8080
 
+# /actuator/health is public and reports only UP/DOWN; the JVM needs a moment to start.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD wget -qO- http://localhost:8080/actuator/health | grep -q '"UP"' || exit 1
+
 # Start the slim application jar produced by "tools extract"; it references the
 # extracted dependency jars via its manifest Class-Path.
 ENTRYPOINT ["java", "-jar", "application.jar"]

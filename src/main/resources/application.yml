@@ -35,6 +35,22 @@ spring:
               - email
               - profile
 
+# Only the health and info endpoints are exposed; both are reachable without login so
+# Docker/Kubernetes probes work. Health shows the status only, never component details.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  auth:
+    # Comma-separated Google account emails seeded into the allowlist on startup.
+    allowed-emails: ${APP_ALLOWED_EMAILS:}
+
 shelly:
   cloud:
     region: ${SHELLY_REGION:shelly-241-eu}

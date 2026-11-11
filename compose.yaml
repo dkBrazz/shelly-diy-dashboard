@@ -1,4 +1,24 @@
 services:
+  app:
+    # Published by .github/workflows/main.yml. Run `docker compose build` to build locally instead.
+    image: ghcr.io/dkbrazz/shelly-diy-dashboard:${APP_IMAGE_TAG:-main}
+    build: .
+    pull_policy: missing
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Inside the Compose network the database is always reachable at this address,
+      # regardless of the host port mapping configured for timescaledb below.
+      DB_HOST: timescaledb
+      DB_PORT: 5432
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+
   timescaledb:
     image: timescale/timescaledb:2.25.2-pg18
     restart: unless-stopped
@@ -7,7 +27,7 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
     ports:
-      - "${DB_PORT:-5433}:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - timescaledb-data:/var/lib/postgresql
     healthcheck:

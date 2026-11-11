@@ -26,7 +26,8 @@ class SecurityConfig(private val userAuthService: UserAuthorizationService) {
         http
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers("/", "/index.html", "/static/**", "/assets/**", "/vite.svg").permitAll()
+                    .requestMatchers("/", "/index.html", "/static/**", "/assets/**", "/favicon.svg").permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                     .anyRequest().authenticated()
             }
             .exceptionHandling { exceptions ->
