@@ -24,6 +24,17 @@ export const formatMeasure = (value: number | null | undefined): string => {
   return value.toFixed(1);
 };
 
+/**
+ * Converts a decimal Shelly device id to its zero-padded lower-case hex form
+ * (6 or 12 chars, as Shelly documents). Returns null for ids that are not plain
+ * decimals, e.g. Gen1 hex ids or BLE / Z-Wave ids that start with `X`.
+ */
+export const formatDeviceIdHex = (externalId: string): string | null => {
+  if (!/^\d+$/.test(externalId)) return null;
+  const hex = BigInt(externalId).toString(16);
+  return hex.padStart(hex.length <= 6 ? 6 : 12, '0');
+};
+
 export const formatToQuery = (date: Date | string | number): string => {
   const d = new Date(date);
   if (isNaN(d.getTime())) return '';

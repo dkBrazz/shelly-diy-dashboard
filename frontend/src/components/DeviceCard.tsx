@@ -4,7 +4,7 @@ import MeasureTile from './MeasureTile';
 import VoltageGraph from './VoltageGraph';
 import CurrentGraph from './CurrentGraph';
 import { Activity, Thermometer, Sigma } from 'lucide-react';
-import { formatMeasure } from '../utils/formatters';
+import { formatDeviceIdHex, formatMeasure } from '../utils/formatters';
 import { SCOPE_DURATIONS, SCOPE_LABELS } from '../types';
 
 interface DeviceCardProps {
@@ -64,6 +64,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, now, sco
   }, [device.id, scope, customRange]);
 
   const isOnline = latestMeasure && (now.getTime() - new Date(latestMeasure.time).getTime() < 60000);
+  const hexId = formatDeviceIdHex(device.externalId);
 
   return (
     <div className="min-w-[380px] bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-xl transition-all hover:border-gray-700">
@@ -76,7 +77,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, now, sco
           <div>
             <h3 className="font-bold text-gray-100">{device.name || device.code || 'Shelly Device'}</h3>
             <p className="text-xs text-gray-500 font-mono">ID: {device.externalId}</p>
-            <p className="text-xs text-gray-500 font-mono">Hex: {BigInt(device.externalId).toString(16).toLowerCase()}</p>
+            {hexId && <p className="text-xs text-gray-500 font-mono">Hex: {hexId}</p>}
             <p className="text-xs text-gray-500 font-mono">Code: {device.code}</p>
             <p className="text-xs text-gray-400 font-mono">Gen: {device.gen || 'N/A'}</p>
           </div>
