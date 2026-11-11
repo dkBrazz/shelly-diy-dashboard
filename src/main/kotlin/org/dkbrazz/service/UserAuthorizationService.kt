@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 @Service
 class UserAuthorizationService(private val userRepository: UserRepository) {
     fun verifyEmail(email: String?) {
-        if (email == null || userRepository.findByEmail(email) == null) {
+        if (email == null || userRepository.findByEmailIgnoreCase(email) == null) {
             throw OAuth2AuthenticationException(OAuth2Error("invalid_user"), "User with email $email is not allowed")
         }
     }

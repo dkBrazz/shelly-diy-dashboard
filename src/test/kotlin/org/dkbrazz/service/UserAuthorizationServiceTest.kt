@@ -15,7 +15,7 @@ class UserAuthorizationServiceTest {
     @Test
     fun `verifyEmail should pass when email exists in database`() {
         val email = "allowed@example.com"
-        `when`(userRepository.findByEmail(email)).thenReturn(User(email = email))
+        `when`(userRepository.findByEmailIgnoreCase(email)).thenReturn(User(email = email))
         
         userAuthService.verifyEmail(email)
     }
@@ -30,7 +30,7 @@ class UserAuthorizationServiceTest {
     @Test
     fun `verifyEmail should throw exception when email is not in database`() {
         val email = "notallowed@example.com"
-        `when`(userRepository.findByEmail(email)).thenReturn(null)
+        `when`(userRepository.findByEmailIgnoreCase(email)).thenReturn(null)
         
         assertThrows<OAuth2AuthenticationException> {
             userAuthService.verifyEmail(email)

@@ -111,18 +111,6 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, latestMeasure, now, sco
           <MeasureTile label="Power" unit="kW" value={(latestMeasure?.cPower ?? 0)/1000} phase="C" />
         </div>
 
-        {/* Total Power and Info */}
-        {/*<div className="flex justify-between items-center bg-gray-800/50 p-3 rounded-lg border border-gray-700/50">*/}
-        {/*   <div className="flex items-center space-x-2">*/}
-        {/*     <Cpu className="w-4 h-4 text-blue-400" />*/}
-        {/*     <span className="text-xs text-gray-400 font-medium">Gen: {device.gen || 'N/A'}</span>*/}
-        {/*   </div>*/}
-        {/*   <div className="text-right">*/}
-        {/*     <span className="text-xs text-gray-500 block">Total Load</span>*/}
-        {/*     <span className="text-xl font-bold text-gray-100">{formatMeasure(latestMeasure?.totalPower)} W</span>*/}
-        {/*   </div>*/}
-        {/*</div>*/}
-
         {/* Historical graph */}
         <div>
           <h4 className="text-sm font-semibold text-gray-400 flex items-center space-x-2 px-1">

@@ -171,7 +171,7 @@ function App() {
               <Zap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black tracking-tight uppercase italic">Shelly <span className="text-blue-500">Cloud</span></h1>
+              <h1 className="text-2xl font-black tracking-tight uppercase italic">Shelly <span className="text-blue-500">DIY Dashboard</span></h1>
               <div className="flex items-center space-x-2">
                 <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Real-time Monitoring</span>
@@ -282,9 +282,9 @@ function App() {
       {/* Footer */}
       <footer className="w-full mt-12 pt-8 border-t border-gray-900 text-center">
         <p className="text-xs text-gray-600 font-medium uppercase tracking-widest flex items-center justify-center space-x-2">
-          <span>Shelly Dashboard DIY</span>
+          <a href="https://github.com/dkBrazz/shelly-diy-dashboard" className="hover:text-gray-400 transition-colors">Shelly DIY Dashboard</a>
           <span className="h-1 w-1 bg-gray-800 rounded-full"></span>
-          <span>JVM Stack + Kotlin + React</span>
+          <span>Kotlin + Spring Boot + React</span>
         </p>
       </footer>
     </div>

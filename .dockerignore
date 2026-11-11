@@ -19,5 +19,10 @@ frontend/dist/
 
 # Docker
 Dockerfile
-docker-compose.yml
+compose.yaml
 .dockerignore
+
+# Local environment
+.env
+.env.*
+!.env.example

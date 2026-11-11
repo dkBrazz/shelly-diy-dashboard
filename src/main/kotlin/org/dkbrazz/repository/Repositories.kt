@@ -10,7 +10,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 
 interface UserRepository : JpaRepository<User, Int> {
-    fun findByEmail(email: String): User?
+    fun findByEmailIgnoreCase(email: String): User?
 }
 
 interface DeviceRepository : JpaRepository<Device, Int> {
@@ -18,12 +18,6 @@ interface DeviceRepository : JpaRepository<Device, Int> {
 }
 
 interface PowerMeasureRepository : JpaRepository<PowerMeasure, PowerMeasureId> {
-    fun findByDeviceIdAndTimeBetweenOrderByTimeAsc(
-        deviceId: Int, 
-        start: OffsetDateTime, 
-        end: OffsetDateTime
-    ): List<PowerMeasure>
-    
     fun findFirstByDeviceIdOrderByTimeDesc(deviceId: Int): PowerMeasure?
 
     @Query(value = """

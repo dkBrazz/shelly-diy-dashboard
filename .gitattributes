@@ -1,0 +1,18 @@
+# Normalize line endings so checkouts on Windows (core.autocrlf=true) do not
+# break Linux shell scripts inside the Docker build.
+* text=auto
+
+gradlew text eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+gradlew.bat text eol=crlf
+*.bat text eol=crlf
+
+*.jar binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
